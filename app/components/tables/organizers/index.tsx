@@ -1,48 +1,48 @@
 'use client';
-import { Delete, Trash, Plus, Pencil } from "lucide-react";
+import { Delete, Trash, Plus, Pencil, Phone, Mail } from "lucide-react";
 import Checkbox from "../../checkbox";
 import Button from "../../button";
 import { useState } from "react";
-import { User } from "@/app/types";
+import { Organizer } from "@/app/types";
 import { formatDate } from "@/lib/utils";
 
-interface UsersTableProps {
-  users: User[];
+interface OrganizersTableProps {
+  organizers: Organizer[];
   isLoading?: boolean;
-  onUserDeleted?: () => void;
-  onAddUserClick?: () => void;
-  onEditUserClick?: (user: User) => void;
+  onOrganizerDeleted?: () => void;
+  onAddOrganizerClick?: () => void;
+  onEditOrganizerClick?: (organizer: Organizer) => void;
 }
 
-export default function UsersTable({ users, isLoading, onUserDeleted, onAddUserClick, onEditUserClick }: UsersTableProps) {
+export default function OrganizersTable({ organizers, isLoading, onOrganizerDeleted, onAddOrganizerClick, onEditOrganizerClick }: OrganizersTableProps) {
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
-  const [selectedUsers, setSelectedUsers] = useState<Set<string | number>>(new Set());
+  const [selectedOrganizers, setSelectedOrganizers] = useState<Set<string | number>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const safeUsers = Array.isArray(users) ? users : [];
+  const safeOrganizers = Array.isArray(organizers) ? organizers : [];
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedUsers(new Set(safeUsers.map(user => user.UserId)));
+      setSelectedOrganizers(new Set(safeOrganizers.map(organizer => organizer.OrganizerId)));
     } else {
-      setSelectedUsers(new Set());
+      setSelectedOrganizers(new Set());
     }
   };
 
-  const handleSelectUser = (userId: string | number, checked: boolean) => {
-    const newSelected = new Set(selectedUsers);
+  const handleSelectOrganizer = (organizerId: string | number, checked: boolean) => {
+    const newSelected = new Set(selectedOrganizers);
     if (checked) {
-      newSelected.add(userId);
+      newSelected.add(organizerId);
     } else {
-      newSelected.delete(userId);
+      newSelected.delete(organizerId);
     }
-    setSelectedUsers(newSelected);
+    setSelectedOrganizers(newSelected);
   };
 
   const handleBulkDelete = async () => {
-    if (selectedUsers.size === 0) return;
+    if (selectedOrganizers.size === 0) return;
 
-    const confirmMessage = `Are you sure you want to delete ${selectedUsers.size} user${selectedUsers.size > 1 ? 's' : ''}?`;
+    const confirmMessage = `Are you sure you want to delete ${selectedOrganizers.size} organizer${selectedOrganizers.size > 1 ? 's' : ''}?`;
     if (!confirm(confirmMessage)) {
       return;
     }
@@ -50,24 +50,24 @@ export default function UsersTable({ users, isLoading, onUserDeleted, onAddUserC
     setIsDeleting(true);
     
     try {
-      const deletePromises = Array.from(selectedUsers).map(async (userId) => {
-        const response = await fetch(`/api/users?id=${encodeURIComponent(userId)}`, {
+      const deletePromises = Array.from(selectedOrganizers).map(async (organizerId) => {
+        const response = await fetch(`/api/organizers?id=${encodeURIComponent(organizerId)}`, {
           method: 'DELETE',
         });
         
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(`Failed to delete user ${userId}: ${error.error}`);
+          throw new Error(`Failed to delete organizer ${organizerId}: ${error.error}`);
         }
         
-        return userId;
+        return organizerId;
       });
 
       await Promise.all(deletePromises);
       
-      setSelectedUsers(new Set());
-      onUserDeleted?.();
-      alert(`Successfully deleted ${selectedUsers.size} user${selectedUsers.size > 1 ? 's' : ''}`);
+      setSelectedOrganizers(new Set());
+      onOrganizerDeleted?.();
+      alert(`Successfully deleted ${selectedOrganizers.size} organizer${selectedOrganizers.size > 1 ? 's' : ''}`);
     } catch (error) {
       console.error('Bulk delete error:', error);
       alert(`Error during bulk delete: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -76,46 +76,46 @@ export default function UsersTable({ users, isLoading, onUserDeleted, onAddUserC
     }
   };
 
-  const handleDelete = async (userId: string | number) => {
-    if (!confirm('Are you sure you want to delete this user?')) {
+  const handleDelete = async (organizerId: string | number) => {
+    if (!confirm('Are you sure you want to delete this organizer?')) {
       return;
     }
 
-    console.log('Attempting to delete user with ID:', userId, typeof userId);
+    console.log('Attempting to delete organizer with ID:', organizerId, typeof organizerId);
 
-    setDeletingId(userId);
+    setDeletingId(organizerId);
     
     try {
-      if (!userId) {
-        alert('Invalid user ID');
+      if (!organizerId) {
+        alert('Invalid organizer ID');
         return;
       }
 
-      const response = await fetch(`/api/users?id=${encodeURIComponent(userId)}`, {
+      const response = await fetch(`/api/organizers?id=${encodeURIComponent(organizerId)}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        const newSelected = new Set(selectedUsers);
-        newSelected.delete(userId);
-        setSelectedUsers(newSelected);
+        const newSelected = new Set(selectedOrganizers);
+        newSelected.delete(organizerId);
+        setSelectedOrganizers(newSelected);
         
-        onUserDeleted?.();
+        onOrganizerDeleted?.();
       } else {
         const error = await response.json();
         console.error('Delete error response:', error);
-        alert(`Error deleting user: ${error.error}`);
+        alert(`Error deleting organizer: ${error.error}`);
       }
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Failed to delete user. Please try again.');
+      alert('Failed to delete organizer. Please try again.');
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleEdit = (user: User) => {
-    onEditUserClick?.(user);
+  const handleEdit = (organizer: Organizer) => {
+    onEditOrganizerClick?.(organizer);
   };
 
   if (isLoading) {
@@ -135,24 +135,24 @@ export default function UsersTable({ users, isLoading, onUserDeleted, onAddUserC
     return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('');
   }
 
-  const isAllSelected = safeUsers.length > 0 && selectedUsers.size === safeUsers.length;
+  const isAllSelected = safeOrganizers.length > 0 && selectedOrganizers.size === safeOrganizers.length;
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="px-6 py-4 flex justify-between items-center border-b border-gray-200">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">Users</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Organizers</h2>
           <p className="text-sm text-gray-500 mt-1">
-            {safeUsers.length} {safeUsers.length === 1 ? 'user' : 'users'} in total
-            {selectedUsers.size > 0 && (
+            {safeOrganizers.length} {safeOrganizers.length === 1 ? 'organizer' : 'organizers'} in total
+            {selectedOrganizers.size > 0 && (
               <span className="ml-2 text-blue-600">
-                • {selectedUsers.size} selected
+                • {selectedOrganizers.size} selected
               </span>
             )}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {selectedUsers.size > 0 && (
+          {selectedOrganizers.size > 0 && (
             <Button 
               size="sm" 
               variant="danger" 
@@ -160,35 +160,35 @@ export default function UsersTable({ users, isLoading, onUserDeleted, onAddUserC
               disabled={isDeleting}
               icon={<Trash size={16} />}
             >
-              {isDeleting ? 'Deleting...' : `Delete (${selectedUsers.size})`}
+              {isDeleting ? 'Deleting...' : `Delete (${selectedOrganizers.size})`}
             </Button>
           )}
           <Button 
             size="sm" 
             variant="outlined" 
-            onClick={onAddUserClick}
+            onClick={onAddOrganizerClick}
             className="flex items-center gap-2 shadow-sm"
           >
             <Plus size={16} className="stroke-[2.5]" />
-            Add User
+            Add Organizer
           </Button>
         </div>
       </div>
-      {safeUsers.length === 0 ? (
+      {safeOrganizers.length === 0 ? (
         <div className="p-8 text-center">
           <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
             <Plus size={32} className="text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No users yet</h3>
-          <p className="text-gray-500 mb-6">Get started by adding your first user</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No organizers yet</h3>
+          <p className="text-gray-500 mb-6">Get started by adding your first organizer</p>
           <Button 
             size="md" 
             variant="outlined" 
-            onClick={onAddUserClick}
+            onClick={onAddOrganizerClick}
             className="flex items-center gap-2 mx-auto shadow-sm"
           >
             <Plus size={18} className="stroke-[2.5]" />
-            Add User
+            Add Organizer
           </Button>
         </div>
       ) : (
@@ -210,6 +210,9 @@ export default function UsersTable({ users, isLoading, onUserDeleted, onAddUserC
                   Email
                 </th>
                 <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Phone
+                </th>
+                <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
                 <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
@@ -218,49 +221,62 @@ export default function UsersTable({ users, isLoading, onUserDeleted, onAddUserC
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {safeUsers.map((user, index) => (
+              {safeOrganizers.map((organizer, index) => (
                 <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
                   <td className="px-6 py-2.5 whitespace-nowrap">
                     <Checkbox 
-                      id={`user-${user.UserId}`}
-                      checked={selectedUsers.has(user.UserId)}
-                      onChange={(checked) => handleSelectUser(user.UserId, checked)}
+                      id={`organizer-${organizer.OrganizerId}`}
+                      checked={selectedOrganizers.has(organizer.OrganizerId)}
+                      onChange={(checked) => handleSelectOrganizer(organizer.OrganizerId, checked)}
                     />
                   </td>
                   <td className="px-6 py-2.5 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center">
                         <span className="font-medium text-sm">
-                          {getInitials(user.Name)}
+                          {getInitials(organizer.Name)}
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.Name}</div>
+                        <div className="text-sm font-medium text-gray-900">{organizer.Name}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-600">
-                    {user.Email}
+                    <div className="flex items-center gap-2">
+                      <Mail size={14} className="text-gray-400" />
+                      {organizer.Email}
+                    </div>
                   </td>
                   <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-600">
-                    {formatDate(user.Created_At)}
+                    {organizer.Phone ? (
+                      <div className="flex items-center gap-2">
+                        <Phone size={14} className="text-gray-400" />
+                        {organizer.Phone}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic">No phone</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-600">
+                    {formatDate(organizer.Created_At)}
                   </td>
                   <td className="px-6 py-2.5 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleEdit(user)}
+                        onClick={() => handleEdit(organizer)}
                         className="cursor-pointer text-blue-500 hover:text-blue-700 transition-colors duration-200 p-1 rounded-md bg-blue-50"
-                        title="Edit user"
+                        title="Edit organizer"
                       >
                         <Pencil size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(user.UserId)}
-                        disabled={deletingId === user.UserId || isDeleting}
+                        onClick={() => handleDelete(organizer.OrganizerId)}
+                        disabled={deletingId === organizer.OrganizerId || isDeleting}
                         className="cursor-pointer text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 p-1 rounded-md bg-red-50"
-                        title="Delete user"
+                        title="Delete organizer"
                       >
-                        {deletingId === user.UserId ? (
+                        {deletingId === organizer.OrganizerId ? (
                           <Delete size={18} className="animate-pulse" />
                         ) : (
                           <Trash size={18} />
