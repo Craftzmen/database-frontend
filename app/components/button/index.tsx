@@ -30,7 +30,7 @@ export default function Button({
     const variantStyles = {
         solid: "bg-black text-white hover:bg-gray-500",
         outlined: "border border-black text-black bg-transparent hover:bg-black hover:text-white",
-        danger: "bg-red-600 text-white hover:bg-red-700"
+        danger: "border border-red-600 text-red-600 bg-transparent hover:bg-red-600 hover:text-white"
     };
     
     const buttonClasses = `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`;
